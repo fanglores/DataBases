@@ -7,16 +7,16 @@ from PyQt5.QtCore import pyqtSlot
 
 #click functions
 def insert_button_click():
-    print('Got click!')
+    print('Insertion!')
 
 def update_button_click():
-    print('Got click!')
+    print('Updating!')
 
 def delete_button_click():
-    print('Got click!')
+    print('Annihilation!')
 
-def search_button_click():
-    print('Got click!')
+def search_button_click(self):
+    print('Google!')
 
 
 
@@ -32,7 +32,7 @@ except:
 #create application
 try:
     app = QApplication(sys.argv)
-    
+
     #create window
     window = QWidget()
 
@@ -53,12 +53,12 @@ try:
     delete_button = QPushButton(window)
     delete_button.setText('DELETE')
     delete_button.move(360, 200)
-    delete_button.clicked.connect(update_button_click)
+    delete_button.clicked.connect(delete_button_click)
 
     search_button = QPushButton(window)
     search_button.setText('SEARCH')
     search_button.move(460, 200)
-    search_button.clicked.connect(update_button_click)
+    search_button.clicked.connect(search_button_click)
 except:
     print('Error while initializing application')
     app.closeAllWindows()
