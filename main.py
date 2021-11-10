@@ -9,12 +9,30 @@ from PyQt5.QtCore import pyqtSlot
 def insert_button_click():
     try:
         s = n = p = c = h = t = None
+        err = ""
+
         if (surname_textbox.text()): s = surname_textbox.text()
+        else: err += "surname "
+
         if (name_textbox.text()): n = name_textbox.text()
+        else: err += "name "
+
         if (patronymic_textbox.text()): p = patronymic_textbox.text()
+        else: err += "patronymic "
+
         if (city_textbox.text()): c = city_textbox.text()
         if (house_textbox.text()): h = house_textbox.text()
+
         if (telephone_textbox.text()): t = telephone_textbox.text()
+        else: err += "telephone "
+
+        if(err):
+            emsgb = QMessageBox(window)
+            emsgb.setIcon(QMessageBox.Critical)
+            emsgb.setWindowTitle("Insertion error")
+            emsgb.setText("Some parameters are not specified!")
+            emsgb.setInformativeText("Not specified: " + err)
+            emsgb.show()
 
         print("[DEBUG] Current query is \'INSERT INTO main (surname, name, patronymic, city, house, telephone) VALUES (%s, %s, %s, %s, %s, %s)", (s, n, p, c, h, t))
     except:
@@ -52,10 +70,25 @@ def search_button_click(self):
 
     try:
         cursor.execute(("SELECT * FROM main WHERE" + query))
-        print(cursor.fetchall())
+        data_array = cursor.fetchall()
+        print(data_array)
         print('Google!\n')
     except:
         print("[ERROR] Error while executing search query!\n")
+
+    try:
+        table.setRowCount(len(data_array))
+        for i in range (len(data_array)):
+            table.setItem(i, 0, QTableWidgetItem(str(data_array[i][0])))
+            table.setItem(i, 1, QTableWidgetItem(data_array[i][1]))
+            table.setItem(i, 2, QTableWidgetItem(data_array[i][2]))
+            table.setItem(i, 3, QTableWidgetItem(data_array[i][3]))
+            table.setItem(i, 4, QTableWidgetItem(data_array[i][4]))
+            table.setItem(i, 5, QTableWidgetItem(data_array[i][5]))
+            table.setItem(i, 6, QTableWidgetItem(data_array[i][6]))
+        #table.resizeColumnsToContents()
+    except:
+        print("[ERROR] Error while updating a table!\n")
 
 #create connection
 try:
@@ -82,29 +115,33 @@ try:
     insert_button = QPushButton(window)
     insert_button.setText('INSERT')
     insert_button.setFont(QFont('Arial', 10))
-    insert_button.move(160, 200)
+    insert_button.move(160, 150)
     insert_button.clicked.connect(insert_button_click)
+    insert_button.setToolTip('Adds a new entry in DB. For insertion required surname, name, patronymic and telephone.')
 
     #update
     update_button = QPushButton(window)
     update_button.setText('UPDATE')
     update_button.setFont(QFont('Arial', 10))
-    update_button.move(260, 200)
+    update_button.move(260, 150)
     update_button.clicked.connect(update_button_click)
+    update_button.setToolTip('Edits an entry in DB.')
 
     #delete
     delete_button = QPushButton(window)
     delete_button.setText('DELETE')
     delete_button.setFont(QFont('Arial', 10))
-    delete_button.move(360, 200)
+    delete_button.move(360, 150)
     delete_button.clicked.connect(delete_button_click)
+    delete_button.setToolTip('Removes an entry from DB.')
 
     #search
     search_button = QPushButton(window)
     search_button.setText('SEARCH')
     search_button.setFont(QFont('Arial', 10))
-    search_button.move(460, 200)
+    search_button.move(460, 150)
     search_button.clicked.connect(search_button_click)
+    search_button.setToolTip('Searches entries in DB by specified parameters.')
 
 #textboxes init
     #surname
@@ -166,6 +203,24 @@ try:
     telephone_textbox = QLineEdit(window)
     telephone_textbox.setFont(QFont('Arial', 12))
     telephone_textbox.move(520, 100)
+
+    #info
+    info_label = QLabel(window)
+    info_label.setStyleSheet("background-color: white; border-top: 1px solid black")
+    info_label.setFont(QFont('Arial', 12))
+    info_label.setText('\t\tThis is an info label!\tYou will see important information here!')
+    info_label.setFixedSize(720, 20)
+    info_label.move(0, 460)
+
+#output table init
+    table = QTableWidget(window)
+    table.setColumnCount(7)
+    table.setHorizontalHeaderLabels(['ID', 'Surname', 'Name', 'Patronymic', 'City', 'House', 'Telephone'])
+    table.setFixedSize(630,240)
+    table.setColumnWidth(0, 20)
+    table.setColumnWidth(5, 80)
+    table.setColumnWidth(6, 100)
+    table.move(40, 200)
 
     print("[DEBUG] Safe and sound!")
 except:
