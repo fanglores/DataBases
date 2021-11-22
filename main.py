@@ -55,9 +55,9 @@ def delete_button_click():
 def search_button_click(self):
     try:
         query = ""
-        if (surname_textbox.text()): query += (" surname = " + surname_textbox.text() + " AND")
-        if (name_textbox.text()): query += (" name = " + name_textbox.text() + " AND")
-        if (patronymic_textbox.text()): query += (" patronymic = " + patronymic_textbox.text() + " AND")
+        if (surname_textbox.text()): query += (" surname_v = \'" + surname_textbox.text() + "\' AND")
+        if (name_textbox.text()): query += (" name_v = \'" + name_textbox.text() + "\' AND")
+        if (patronymic_textbox.text()): query += (" patronymic_v = \'" + patronymic_textbox.text() + "\' AND")
         if (city_textbox.text()): query += (" city = \'" + city_textbox.text() + "\' AND")
         if (house_textbox.text()): query += (" house = \'" + house_textbox.text() + "\' AND")
         if (telephone_textbox.text()): query += (" telephone = \'" + telephone_textbox.text() + "\'")
@@ -69,7 +69,8 @@ def search_button_click(self):
         print("[ERROR] Error while creating search query!\n")
 
     try:
-        cursor.execute(("SELECT * FROM main WHERE" + query))
+        cursor.execute(("SELECT surname_v, name_v, patronymic_v, city, house, telephone FROM main join surname_db on main.surname = surname_db.uid_s "
+                        + "join name_db on main.name = name_db.uid_n join patronymic_db on main.patronymic = patronymic_db.uid_p WHERE" + query))
         data_array = cursor.fetchall()
         print(data_array)
         print('Google!\n')
@@ -85,7 +86,6 @@ def search_button_click(self):
             table.setItem(i, 3, QTableWidgetItem(data_array[i][3]))
             table.setItem(i, 4, QTableWidgetItem(data_array[i][4]))
             table.setItem(i, 5, QTableWidgetItem(data_array[i][5]))
-            table.setItem(i, 6, QTableWidgetItem(data_array[i][6]))
         #table.resizeColumnsToContents()
     except:
         print("[ERROR] Error while updating a table!\n")
@@ -214,12 +214,9 @@ try:
 
 #output table init
     table = QTableWidget(window)
-    table.setColumnCount(7)
-    table.setHorizontalHeaderLabels(['ID', 'Surname', 'Name', 'Patronymic', 'City', 'House', 'Telephone'])
+    table.setColumnCount(6)
+    table.setHorizontalHeaderLabels(['Surname', 'Name', 'Patronymic', 'City', 'House', 'Telephone'])
     table.setFixedSize(630,240)
-    table.setColumnWidth(0, 20)
-    table.setColumnWidth(5, 80)
-    table.setColumnWidth(6, 100)
     table.move(40, 200)
 
     print("[DEBUG] Safe and sound!")
