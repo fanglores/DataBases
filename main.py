@@ -79,7 +79,32 @@ def insert_button_click():
         return None
 
 def update_button_click():
-    print('Updating!\n')
+
+    try:
+        sri = table.selectionModel().currentIndex().row()
+
+        if(sri == -1):
+            wmsgb = QMessageBox(window)
+            wmsgb.setIcon(QMessageBox.Warning)
+            wmsgb.setWindowTitle("Update error")
+            wmsgb.setText("Select a table row first!")
+            #wmsgb.setInformativeText("Not specified:")
+            wmsgb.show()
+            return None
+
+        print("[DEBUG][QUERY]")
+    except:
+        print("[ERROR] Error while creating a query!")
+        return None
+
+    try:
+        #execute a query
+        print("UPDATE main SET surname = %s, name = %s WHERE uid = sri[0]")
+
+        print('Updating!\n')
+    except:
+        print("[ERROR] Error while executing a query!")
+        return None
 
 def delete_button_click():
     #make msgbox
@@ -123,7 +148,7 @@ def delete_button_click():
         print("[ERROR] Error while executing query!")
         return None
 
-def search_button_click(self):
+def search_button_click():
     try:
         query = ""
         if (surname_textbox.text()): query += (" surname_v = \'" + surname_textbox.text() + "\' AND")
@@ -141,7 +166,7 @@ def search_button_click(self):
         return None
 
     try:
-        cursor.execute(("SELECT surname_v, name_v, patronymic_v, city, house, telephone FROM main join surname_db on main.surname = surname_db.uid_s "
+        cursor.execute(("SELECT uid, surname_v, name_v, patronymic_v, city, house, telephone FROM main join surname_db on main.surname = surname_db.uid_s "
                         + "join name_db on main.name = name_db.uid_n join patronymic_db on main.patronymic = patronymic_db.uid_p WHERE" + query))
         data_array = cursor.fetchall()
         print(data_array)
@@ -159,6 +184,7 @@ def search_button_click(self):
             table.setItem(i, 3, QTableWidgetItem(data_array[i][3]))
             table.setItem(i, 4, QTableWidgetItem(data_array[i][4]))
             table.setItem(i, 5, QTableWidgetItem(data_array[i][5]))
+            table.setItem(i, 6, QTableWidgetItem(data_array[i][6]))
         #table.resizeColumnsToContents()
     except:
         print("[ERROR] Error while updating a table!\n")
@@ -288,8 +314,10 @@ try:
 
 #output table init
     table = QTableWidget(window)
-    table.setColumnCount(6)
-    table.setHorizontalHeaderLabels(['Surname', 'Name', 'Patronymic', 'City', 'House', 'Telephone'])
+    table.setColumnCount(7)
+    table.setHorizontalHeaderLabels(['ID', 'Surname', 'Name', 'Patronymic', 'City', 'House', 'Telephone'])
+    table.setColumnWidth(0, 20)
+    table.setColumnWidth(5, 70)
     table.setFixedSize(630,240)
     table.move(40, 200)
 
