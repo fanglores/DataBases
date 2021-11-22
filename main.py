@@ -1,9 +1,33 @@
 import sys
+import time
+
 import psycopg2 as pc2
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import pyqtSlot
+
+#sub functions
+def get_id(val, tab):
+    if (tab == 's'): path = 'surname_'
+    elif(tab == 'n'): path = 'name_'
+    else: path = 'patronymic_'
+
+    print("[DEBUG][QUERY] SELECT * FROM " + path + "db WHERE " + path + "v = \'" + val + "\'")
+    cursor.execute("SELECT * FROM " + path + "db WHERE " + path + "v = \'" + val + "\'")
+    ls = cursor.fetchall()
+
+    if(len(ls) != 0):
+        return ls[0][0]
+    else:
+        print("[DEBUG][QUERY] INSERT INTO " + path + "db (" + path + "v) VALUES (\'" + val + "\')")
+        cursor.execute("INSERT INTO " + path + "db (" + path + "v) VALUES (\'" + val + "\')")
+        db_con.commit()
+        time.sleep(500)
+
+        cursor.execute("SELECT * FROM " + path + "db WHERE " + path + "v = \'" + val + "\'")
+        ls = cursor.fetchall()
+        return ls[0][0]
 
 #click functions
 def insert_button_click():
@@ -33,17 +57,26 @@ def insert_button_click():
             emsgb.setText("Some parameters are not specified!")
             emsgb.setInformativeText("Not specified: " + err)
             emsgb.show()
+            return None
 
-        print("[DEBUG] Current query is \'INSERT INTO main (surname, name, patronymic, city, house, telephone) VALUES (%s, %s, %s, %s, %s, %s)", (s, n, p, c, h, t))
+        print("[DEBUG][QUERY] \'INSERT INTO main (surname, name, patronymic, city, house, telephone) VALUES (%s, %s, %s, %s, %s, %s)", (s, n, p, c, h, t))
     except:
         print("[ERROR] Error while creating insert query!\n")
+        return None
 
     try:
+        #check if name, surname, petronymic is already existing, if yes - get their id and paste it, otherwise insert in table, then get id
+        s = get_id(s, 's')
+        n = get_id(n, 'n')
+        p = get_id(p, 'p')
+        print('[DEBUG] Parsed to ', s, n, p)
+
         cursor.execute("INSERT INTO main (surname, name, patronymic, city, house, telephone) VALUES (%s, %s, %s, %s, %s, %s)", (s, n, p, c, h, t))
         db_con.commit()
         print('Insertion!\n')
     except:
         print("[ERROR] Error while executing insert query!\n")
+        return None
 
 def update_button_click():
     print('Updating!\n')
@@ -64,9 +97,10 @@ def search_button_click(self):
         if (not query): query = " true"
         elif (query[-1] == 'D'): query = query[0: -3]
 
-        print("[DEBUG] Current query is \'SELECT * FROM main WHERE" + query + "\'")
+        print("[DEBUG][QUERY] \'SELECT * FROM main WHERE" + query + "\'")
     except:
         print("[ERROR] Error while creating search query!\n")
+        return None
 
     try:
         cursor.execute(("SELECT surname_v, name_v, patronymic_v, city, house, telephone FROM main join surname_db on main.surname = surname_db.uid_s "
@@ -76,6 +110,7 @@ def search_button_click(self):
         print('Google!\n')
     except:
         print("[ERROR] Error while executing search query!\n")
+        return None
 
     try:
         table.setRowCount(len(data_array))
@@ -89,6 +124,7 @@ def search_button_click(self):
         #table.resizeColumnsToContents()
     except:
         print("[ERROR] Error while updating a table!\n")
+        return None
 
 #create connection
 try:
