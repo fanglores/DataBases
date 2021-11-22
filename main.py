@@ -23,7 +23,7 @@ def get_id(val, tab):
         print("[DEBUG][QUERY] INSERT INTO " + path + "db (" + path + "v) VALUES (\'" + val + "\')")
         cursor.execute("INSERT INTO " + path + "db (" + path + "v) VALUES (\'" + val + "\')")
         db_con.commit()
-        time.sleep(500)
+        time.sleep(1)
 
         cursor.execute("SELECT * FROM " + path + "db WHERE " + path + "v = \'" + val + "\'")
         ls = cursor.fetchall()
@@ -83,7 +83,45 @@ def update_button_click():
 
 def delete_button_click():
     #make msgbox
-    print('Annihilation!\n')
+    try:
+###warning! It will be insert into parent table if no such surname, name or patronymic were found
+        query = ""
+        if (surname_textbox.text()): query += (" surname = " + str(get_id(surname_textbox.text(), 's')) + " AND")
+        if (name_textbox.text()): query += (" name = " + str(get_id(name_textbox.text(), 'n')) + " AND")
+        if (patronymic_textbox.text()): query += (" patronymic = " + str(get_id(patronymic_textbox.text(), 'p')) + " AND")
+        if (city_textbox.text()): query += (" city = \'" + city_textbox.text() + "\' AND")
+        if (house_textbox.text()): query += (" house = \'" + house_textbox.text() + "\' AND")
+        if (telephone_textbox.text()): query += (" telephone = \'" + telephone_textbox.text() + "\'")
+        if (not query):
+            query = " true"
+        elif (query[-1] == 'D'):
+            query = query[0: -3]
+
+        wmsgb = QMessageBox(window)
+        wmsgb.setIcon(QMessageBox.Warning)
+        wmsgb.setWindowTitle("Delete warning")
+        wmsgb.setText("You are going to delete some records!")
+        wmsgb.setInformativeText("You are going to execute following query: DELETE FROM main WHERE" + query)
+        wmsgb.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        wmsgb.setDefaultButton(QMessageBox.Cancel)
+
+        print("[DEBUG][QUERY] DELETE FROM main WHERE" + query)
+
+        if(wmsgb.exec() == QMessageBox.Cancel):
+            print("[DEBUG] Delete request cancelled")
+            return None
+    except:
+        print("[ERROR] Error while creating query!")
+        return None
+
+    try:
+        cursor.execute("DELETE FROM main WHERE" + query)
+        db_con.commit()
+
+        print('Annihilation!\n')
+    except:
+        print("[ERROR] Error while executing query!")
+        return None
 
 def search_button_click(self):
     try:
@@ -143,7 +181,7 @@ try:
     window = QWidget()
 
     #window init
-    window.setWindowTitle('DataBase Interface v0.1')
+    window.setWindowTitle('DataBase Interface v0.3')
     window.setFixedSize(PyQt5.QtCore.QSize(720, 480))
 
 #buttons init
