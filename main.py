@@ -17,17 +17,60 @@ def get_id(val, tab):
     cursor.execute("SELECT * FROM " + path + "db WHERE " + path + "v = \'" + val + "\'")
     ls = cursor.fetchall()
 
-    if(len(ls) != 0):
+    if(len(ls) > 0):
         return ls[0][0]
     else:
-        print("[DEBUG][QUERY] INSERT INTO " + path + "db (" + path + "v) VALUES (\'" + val + "\')")
-        cursor.execute("INSERT INTO " + path + "db (" + path + "v) VALUES (\'" + val + "\')")
-        db_con.commit()
-        time.sleep(1)
+        wmsgb = QMessageBox(window)
+        wmsgb.setIcon(QMessageBox.Warning)
+        wmsgb.setWindowTitle("Insert error")
+        wmsgb.setText("No such " + path[0:-1] + " in database! Try to insert it manually first.")
+        wmsgb.exec()
 
-        cursor.execute("SELECT * FROM " + path + "db WHERE " + path + "v = \'" + val + "\'")
-        ls = cursor.fetchall()
-        return ls[0][0]
+        raise "Parse error"
+        return None
+
+def update_table():
+    cursor.execute(
+        "SELECT uid, surname_v, name_v, patronymic_v, city, house, telephone FROM main join surname_db on main.surname = surname_db.uid_s "
+        + "join name_db on main.name = name_db.uid_n join patronymic_db on main.patronymic = patronymic_db.uid_p")
+    ls = cursor.fetchall()
+
+    table.setRowCount(len(ls))
+    for i in range(len(ls)):
+        table.setItem(i, 0, QTableWidgetItem(str(ls[i][0])))
+        table.setItem(i, 1, QTableWidgetItem(ls[i][1]))
+        table.setItem(i, 2, QTableWidgetItem(ls[i][2]))
+        table.setItem(i, 3, QTableWidgetItem(ls[i][3]))
+        table.setItem(i, 4, QTableWidgetItem(ls[i][4]))
+        table.setItem(i, 5, QTableWidgetItem(ls[i][5]))
+        table.setItem(i, 6, QTableWidgetItem(ls[i][6]))
+
+#edit table func
+def edit_table(val):
+    print(val)
+    try:
+        # create window
+        window2 = QWidget()
+
+        # window init
+        window2.setWindowTitle('DataBase Editor Tool')
+        window2.setFixedSize(480, 360)
+
+        # insert
+        insert_button2 = QPushButton(window2)
+        insert_button2.setText('INSERT')
+        insert_button2.setFont(QFont('Arial', 10))
+        insert_button2.move(10, 10)
+        insert_button2.clicked.connect(insert_button_click)
+
+        window2.show()
+        #time.sleep(10)
+
+
+
+    except:
+        print("[ERROR] Error while creating secondary window")
+
 
 #click functions
 def insert_button_click():
@@ -73,6 +116,9 @@ def insert_button_click():
 
         cursor.execute("INSERT INTO main (surname, name, patronymic, city, house, telephone) VALUES (%s, %s, %s, %s, %s, %s)", (s, n, p, c, h, t))
         db_con.commit()
+
+        update_table()
+
         print('Insertion!\n')
     except:
         print("[ERROR] Error while executing insert query!\n")
@@ -88,18 +134,50 @@ def update_button_click():
             wmsgb.setIcon(QMessageBox.Warning)
             wmsgb.setWindowTitle("Update error")
             wmsgb.setText("Select a table row first!")
-            #wmsgb.setInformativeText("Not specified:")
             wmsgb.show()
             return None
 
-        print("[DEBUG][QUERY]")
+        query = ""
+
+        if (surname_textbox.text()):
+            s = get_id(surname_textbox.text(), 's')
+            query += "surname = " + str(s) + ", "
+
+        if (name_textbox.text()):
+            n = get_id(name_textbox.text(), 'n')
+            query += "name = " + str(n) + ", "
+
+        if (patronymic_textbox.text()):
+            p = get_id(patronymic_textbox.text(), 'p')
+            query += "patronymic = " + str(p) + ", "
+
+        if (city_textbox.text()):
+            query += "city = \'" + city_textbox.text() + "\', "
+
+        if (house_textbox.text()):
+            query += "house = \'" + house_textbox.text() + "\', "
+
+        if (telephone_textbox.text()):
+            query += "telephone = \'" + telephone_textbox.text() + "\', "
+
+        if(not query):
+            raise "QE"
+        else:
+            query = query[0:-2]
+
+        qid = table.item(sri, 0).text()
+        #update query?????
+
+        print("[DEBUG][QUERY] \'UPDATE main SET " + query + " WHERE uid = " + qid + "\'")
     except:
-        print("[ERROR] Error while creating a query!")
+        print("[ERROR] Error while creating update query!\n")
         return None
 
     try:
-        #execute a query
-        print("UPDATE main SET surname = %s, name = %s WHERE uid = sri[0]")
+        cursor.execute("UPDATE main SET " + query + " WHERE uid = " + qid)
+        db_con.commit()
+
+        update_table()
 
         print('Updating!\n')
     except:
@@ -107,30 +185,26 @@ def update_button_click():
         return None
 
 def delete_button_click():
-    #make msgbox
     try:
-###warning! It will be insert into parent table if no such surname, name or patronymic were found
-        query = ""
-        if (surname_textbox.text()): query += (" surname = " + str(get_id(surname_textbox.text(), 's')) + " AND")
-        if (name_textbox.text()): query += (" name = " + str(get_id(name_textbox.text(), 'n')) + " AND")
-        if (patronymic_textbox.text()): query += (" patronymic = " + str(get_id(patronymic_textbox.text(), 'p')) + " AND")
-        if (city_textbox.text()): query += (" city = \'" + city_textbox.text() + "\' AND")
-        if (house_textbox.text()): query += (" house = \'" + house_textbox.text() + "\' AND")
-        if (telephone_textbox.text()): query += (" telephone = \'" + telephone_textbox.text() + "\'")
-        if (not query):
-            query = " true"
-        elif (query[-1] == 'D'):
-            query = query[0: -3]
+        sri = table.selectionModel().currentIndex().row()
+
+        if (sri == -1):
+            wmsgb = QMessageBox(window)
+            wmsgb.setIcon(QMessageBox.Warning)
+            wmsgb.setWindowTitle("Delete error")
+            wmsgb.setText("Select a table row first!")
+            wmsgb.show()
+            return None
 
         wmsgb = QMessageBox(window)
         wmsgb.setIcon(QMessageBox.Warning)
         wmsgb.setWindowTitle("Delete warning")
-        wmsgb.setText("You are going to delete some records!")
-        wmsgb.setInformativeText("You are going to execute following query: DELETE FROM main WHERE" + query)
+        wmsgb.setText("You are going to delete the record! Are you sure?")
         wmsgb.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
         wmsgb.setDefaultButton(QMessageBox.Cancel)
 
-        print("[DEBUG][QUERY] DELETE FROM main WHERE" + query)
+        qid = table.item(sri, 0).text()
+        print("[DEBUG][QUERY] DELETE FROM main WHERE id = " + qid)
 
         if(wmsgb.exec() == QMessageBox.Cancel):
             print("[DEBUG] Delete request cancelled")
@@ -140,8 +214,10 @@ def delete_button_click():
         return None
 
     try:
-        cursor.execute("DELETE FROM main WHERE" + query)
+        cursor.execute("DELETE FROM main WHERE uid = " + qid)
         db_con.commit()
+
+        update_table()
 
         print('Annihilation!\n')
     except:
@@ -151,9 +227,10 @@ def delete_button_click():
 def search_button_click():
     try:
         query = ""
-        if (surname_textbox.text()): query += (" surname_v = \'" + surname_textbox.text() + "\' AND")
-        if (name_textbox.text()): query += (" name_v = \'" + name_textbox.text() + "\' AND")
-        if (patronymic_textbox.text()): query += (" patronymic_v = \'" + patronymic_textbox.text() + "\' AND")
+        print(surname_cbox.currentText())
+        query += (" surname_v = \'" + surname_cbox.currentText() + "\' AND")
+        query += (" name_v = \'" + name_cbox.currentText() + "\' AND")
+        query += (" patronymic_v = \'" + patronymic_cbox.currentText() + "\' AND")
         if (city_textbox.text()): query += (" city = \'" + city_textbox.text() + "\' AND")
         if (house_textbox.text()): query += (" house = \'" + house_textbox.text() + "\' AND")
         if (telephone_textbox.text()): query += (" telephone = \'" + telephone_textbox.text() + "\'")
@@ -189,6 +266,25 @@ def search_button_click():
     except:
         print("[ERROR] Error while updating a table!\n")
         return None
+
+def comboboxinit():
+    cursor.execute("SELECT name_v FROM name_db")
+    ns = cursor.fetchall()
+
+    cursor.execute("SELECT surname_v FROM surname_db")
+    ss = cursor.fetchall()
+
+    cursor.execute("SELECT patronymic_v FROM patronymic_db")
+    ps = cursor.fetchall()
+
+    for i in range(0, len(ss)):
+        surname_cbox.addItem(ss[i][0])
+
+    for i in range(0, len(ns)):
+        name_cbox.addItem(ns[i][0])
+
+    for i in range(0, len(ps)):
+        patronymic_cbox.addItem(ps[i][0])
 
 #create connection
 try:
@@ -242,6 +338,22 @@ try:
     search_button.move(460, 150)
     search_button.clicked.connect(search_button_click)
     search_button.setToolTip('Searches entries in DB by specified parameters.')
+
+#comboboxes init
+    surname_cbox = QComboBox(window)
+    surname_cbox.setFont(QFont('Arial', 10))
+    surname_cbox.setFixedSize(150, 24)
+    surname_cbox.move(40,54)
+
+    name_cbox = QComboBox(window)
+    name_cbox.setFont(QFont('Arial', 10))
+    name_cbox.setFixedSize(150, 24)
+    name_cbox.move(280, 54)
+
+    patronymic_cbox = QComboBox(window)
+    patronymic_cbox.setFont(QFont('Arial', 10))
+    patronymic_cbox.setFixedSize(150, 24)
+    patronymic_cbox.move(520, 54)
 
 #textboxes init
     #surname
@@ -304,13 +416,27 @@ try:
     telephone_textbox.setFont(QFont('Arial', 12))
     telephone_textbox.move(520, 100)
 
-    #info
-    info_label = QLabel(window)
-    info_label.setStyleSheet("background-color: white; border-top: 1px solid black")
-    info_label.setFont(QFont('Arial', 12))
-    info_label.setText('\t\tThis is an info label!\tYou will see important information here!')
-    info_label.setFixedSize(720, 20)
-    info_label.move(0, 460)
+#edit table buttons
+    surname_edit_button = QPushButton(window)
+    surname_edit_button.setText('...')
+    surname_edit_button.setFont(QFont('Arial', 10))
+    surname_edit_button.setFixedSize(26, 26)
+    surname_edit_button.move(188, 29)
+    surname_edit_button.clicked.connect(lambda: edit_table('s'))
+
+    name_edit_button = QPushButton(window)
+    name_edit_button.setText('...')
+    name_edit_button.setFont(QFont('Arial', 10))
+    name_edit_button.setFixedSize(26, 26)
+    name_edit_button.move(428, 29)
+    name_edit_button.clicked.connect(lambda: edit_table('n'))
+
+    patronymic_edit_button = QPushButton(window)
+    patronymic_edit_button.setText('...')
+    patronymic_edit_button.setFont(QFont('Arial', 10))
+    patronymic_edit_button.setFixedSize(26, 26)
+    patronymic_edit_button.move(668, 29)
+    patronymic_edit_button.clicked.connect(lambda: edit_table('p'))
 
 #output table init
     table = QTableWidget(window)
@@ -320,6 +446,10 @@ try:
     table.setColumnWidth(5, 70)
     table.setFixedSize(630,240)
     table.move(40, 200)
+
+#init boxes
+    comboboxinit()
+    update_table()
 
     print("[DEBUG] Safe and sound!")
 except:
