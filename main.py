@@ -13,6 +13,12 @@ class Window1(QWidget):
         self.setWindowTitle('DataBase Interface v1.1')
         self.setFixedSize(720, 480)
 
+        self.refresh_button = QPushButton(self)
+        self.refresh_button.setText('REFRESH')
+        self.refresh_button.setFont(QFont('Arial', 10))
+        self.refresh_button.move(600, 450)
+        self.refresh_button.clicked.connect(self.update_table)
+
 #buttons init
     #insert
         self.insert_button = QPushButton(self)
@@ -506,13 +512,13 @@ class Window2(QWidget):
 
             qid = self.table.item(sri, 0).text()
 
-            print("[DEBUG][QUERY] \'UPDATE " + self.code + "_db SET " + self.code + " = \'" + self.textbox.text() + "\' WHERE uid_" + self.code[0] + " = " + qid + "\'")
+            print("[DEBUG][QUERY] \'UPDATE " + self.code + "_db SET " + self.code + "_v = \'" + self.textbox.text() + "\' WHERE uid_" + self.code[0] + " = " + qid + "\'")
         except:
             print("[ERROR] Error while creating update query!\n")
             return None
 
         try:
-            cursor.execute("UPDATE " + self.code + "_db SET " + self.code + " = \'" + self.textbox.text() + "\' WHERE uid_" + self.code[0] + " = " + qid)
+            cursor.execute("UPDATE " + self.code + "_db SET " + self.code + "_v = \'" + self.textbox.text() + "\' WHERE uid_" + self.code[0] + " = " + qid)
             db_con.commit()
 
             self.update_table()
@@ -564,10 +570,9 @@ class Window2(QWidget):
             return None
 
     def closeEvent(self, event):
-        print('Terminated')
+        print('[DEBUG] Secondary window was terminated')
         event.accept()
         self.close()
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -606,10 +611,9 @@ def get_id(val, tab):
 
 #edit table func
 def edit_table(val):
-    print(val)
+    print("[DEBUG] Starting secondary window for " + val)
     try:
         window.show_window_2(val)
-
     except:
         print("[ERROR] Error while creating secondary window")
 
