@@ -399,6 +399,10 @@ class Window1(QWidget):
         cursor.execute("SELECT patronymic_v FROM patronymic_db")
         ps = cursor.fetchall()
 
+        self.surname_cbox.clear()
+        self.name_cbox.clear()
+        self.patronymic_cbox.clear()
+
         for i in range(0, len(ss)):
             self.surname_cbox.addItem(ss[i][0])
 
@@ -571,6 +575,8 @@ class Window2(QWidget):
 
     def closeEvent(self, event):
         print('[DEBUG] Secondary window was terminated')
+        window.w1.comboboxinit()
+        window.w1.update_table()
         event.accept()
         self.close()
 
