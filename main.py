@@ -347,12 +347,16 @@ class Window1(QWidget):
         try:
             query = ""
             print(self.surname_cbox.currentText())
-            query += (" surname_v = \'" + self.surname_cbox.currentText() + "\' AND")
-            query += (" name_v = \'" + self.name_cbox.currentText() + "\' AND")
-            query += (" patronymic_v = \'" + self.patronymic_cbox.currentText() + "\' AND")
+            if(self.surname_cbox.currentText() != '-'):
+                query += (" surname_v = \'" + self.surname_cbox.currentText() + "\' AND")
+            if(self.name_cbox.currentText() != '-'):
+                query += (" name_v = \'" + self.name_cbox.currentText() + "\' AND")
+            if(self.patronymic_cbox.currentText() != '-'):
+                query += (" patronymic_v = \'" + self.patronymic_cbox.currentText() + "\' AND")
             if (self.city_textbox.text()): query += (" city = \'" + self.city_textbox.text() + "\' AND")
             if (self.house_textbox.text()): query += (" house = \'" + self.house_textbox.text() + "\' AND")
             if (self.telephone_textbox.text()): query += (" telephone = \'" + self.telephone_textbox.text() + "\'")
+            
             if (not query):
                 query = " true"
             elif (query[-1] == 'D'):
@@ -402,6 +406,10 @@ class Window1(QWidget):
         self.surname_cbox.clear()
         self.name_cbox.clear()
         self.patronymic_cbox.clear()
+
+        self.surname_cbox.addItem('-')
+        self.name_cbox.addItem('-')
+        self.patronymic_cbox.addItem('-')
 
         for i in range(0, len(ss)):
             self.surname_cbox.addItem(ss[i][0])
