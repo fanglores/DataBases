@@ -356,7 +356,7 @@ class Window1(QWidget):
             if (self.city_textbox.text()): query += (" city = \'" + self.city_textbox.text() + "\' AND")
             if (self.house_textbox.text()): query += (" house = \'" + self.house_textbox.text() + "\' AND")
             if (self.telephone_textbox.text()): query += (" telephone = \'" + self.telephone_textbox.text() + "\'")
-            
+
             if (not query):
                 query = " true"
             elif (query[-1] == 'D'):
@@ -545,14 +545,14 @@ class Window2(QWidget):
             sri = self.table.selectionModel().currentIndex().row()
 
             if (sri == -1):
-                wmsgb = QMessageBox(window)
+                wmsgb = QMessageBox(self)
                 wmsgb.setIcon(QMessageBox.Warning)
                 wmsgb.setWindowTitle("Delete error")
                 wmsgb.setText("Select a table row first!")
                 wmsgb.show()
                 return None
 
-            wmsgb = QMessageBox(window)
+            wmsgb = QMessageBox(self)
             wmsgb.setIcon(QMessageBox.Warning)
             wmsgb.setWindowTitle("Delete warning")
             wmsgb.setText("You are going to delete the record! Are you sure?")
@@ -571,14 +571,21 @@ class Window2(QWidget):
 
         try:
             cursor.execute("DELETE FROM " + self.code + "_db WHERE uid_" + self.code[0] + " = " + qid)
-            db_con.commit()
 
+            db_con.commit()
             self.update_table()
 
             print('Secondary Annihilation!\n')
-
         except:
             print("[ERROR] Error while executing query!")
+
+            wmsgb = QMessageBox(self)
+            wmsgb.setIcon(QMessageBox.Critical)
+            wmsgb.setWindowTitle("Delete error")
+            wmsgb.setText("There are some record in other tables, consisting this one!")
+            wmsgb.show()
+
+            db_con.commit()
             return None
 
     def closeEvent(self, event):
